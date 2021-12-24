@@ -46,7 +46,7 @@ class BankingSystem:
                 break
             self.i +=1
        
-
+        database.close()
         if usernameFound == False:
             print("Incorrect username.")
             
@@ -54,6 +54,7 @@ class BankingSystem:
         loginPass = input("Please enter your password: ")
         if loginPass == self.password:
                 print("You have now logged in,", self.username)
+                print()
                 if self.userType == 'user':
                     BankingSystem.customer_view(self)
 
@@ -64,6 +65,7 @@ class BankingSystem:
 
     
     def customer_view(self):
+        
         print("Please select an option:")
         print("1 - View account")
         print("2 - View summary")
@@ -76,14 +78,25 @@ class BankingSystem:
         elif choice == 2:
             print("ok")
         elif choice == 3:
-            print("quit")
+            print("Quitting application.")
         else:
             print("Wrong")
         
     def account_selection(self):
         
+        database = open('userList.csv', 'r', newline='')
+        csvreader = csv.reader(database, delimiter=',')
+        
+        for row in csvreader:
+            
+            if self.username == row[0]:
+                self.information = row[3:]
+                self.information = [string for string in self.information if string !=""]
+                break
+        database.close()    # This is here so the values will update after deposits and withdrawals.
+        
         print("--Account List--")
-        print("Please select an option: ")
+        print("Please select an option (Enter '0' to go back to menu): ")
         print()
         
         for i in range(1, len(self.information)):
@@ -116,6 +129,11 @@ class BankingSystem:
                     self.balance = self.information[choice].split('Balance: ', 1)
                     print("You selected {0} - Saving account: £{1}.".format(choice, self.balance[1]))
                     BankingSystem.account_options(self)
+                    
+            elif choice == 0:
+                accountSelected = True
+                BankingSystem.customer_view(self)
+                
             else:
                 print("Account number does not exist. Try again.")
                 
@@ -137,6 +155,7 @@ class BankingSystem:
         elif choice == 3:
             BankingSystem.account_selection(self)
     
+    
     def deposit(self):
         deposit = int(input("How much money would you like to deposit? "))
         
@@ -152,9 +171,13 @@ class BankingSystem:
                 lines[self.i][4] = ("Overdraft limit: {0}, Balance: {1}".format(self.overdraftAmount, int(self.balance[1]) + deposit))
             
         
-            writer = csv.writer(open('userList.csv', 'w', newline=''), delimiter=',')
-            writer.writerows(lines)
+            with open('userList.csv', 'w', newline = '') as outfile:
+                writer = csv.writer(outfile)
+                writer.writerows(lines)
+                
             print("Your money has been deposited. Thank you.")
+            print()
+            BankingSystem.account_selection(self)
             
         else:
             print("You cannot deposit a negative number, please try again.")
@@ -179,12 +202,19 @@ class BankingSystem:
                 lines[self.i][4] = ("Overdraft limit: {0}, Balance: {1}".format(self.overdraftAmount, int(self.balance[1]) - withdrawal))
             
         
-            writer = csv.writer(open('userList.csv', 'w', newline=''), delimiter=',')
-            writer.writerows(lines)
+            with open('userList.csv', 'w', newline = '') as outfile:
+                writer = csv.writer(outfile)
+                writer.writerows(lines)
+            
             print("Your money has been withdrawn. Thank you.")
+            BankingSystem.account_selection(self)
             
         else:
             print("You cannot withdraw a negative number, please try again.")
             BankingSystem.deposit(self)
+  
+
+        
+        
         
         
