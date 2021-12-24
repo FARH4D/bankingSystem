@@ -1,4 +1,10 @@
 import csv
+import re
+
+# MOST OF THE CODE WILL OBVIOUSLY NOT WORK IF THE USERLIST.CSV FILE IS OPEN IN EXCEL
+# DUE TO INSUFFICIENT PRIVILEGES, SO ONLY OPEN IT IN SPYDER.
+
+
 
 class BankingSystem:
 
@@ -12,17 +18,20 @@ class BankingSystem:
         self.userCurrentAccount = ''
         self.balance = 0
         self.currentSelected = False
+        self.i = 0
+        self.overdraftAmount = ''
 
     def run_app(self):
         print("Welcome to the banking system, please log in first.")
         print()
         loginUser = input("Please enter your username: ")
 
-        database = open('userList.csv')
+        database = open('userList.csv', 'r', newline='')
         csvreader = csv.reader(database, delimiter=',')
 
         usernameFound = False
         for row in csvreader:
+            
             if loginUser == row[0]:
                 self.username = loginUser
                 self.password = row[1]
@@ -34,7 +43,8 @@ class BankingSystem:
                 
                 self.information = [string for string in self.information if string !=""]
                 usernameFound = True
-                
+                break
+            self.i +=1
        
 
         if usernameFound == False:
@@ -87,6 +97,7 @@ class BankingSystem:
                 self.balance = self.information[i].split('Balance: ', 1)
                 print("{0} - Saving account: £{1}".format(i, self.balance[1]) )
         
+        
         accountSelected = False
         while accountSelected == False:
             choice = int(input("Enter a number to select your option: "))
@@ -98,7 +109,9 @@ class BankingSystem:
                 if choice == 1 and self.currentAccount:
                     
                     print("You selected 1 - Current account: £{0}.".format(self.balance[1]))
+                    self.currentSelected = True
                     BankingSystem.account_options(self)
+                    
                 else:
                     self.balance = self.information[choice].split('Balance: ', 1)
                     print("You selected {0} - Saving account: £{1}.".format(choice, self.balance[1]))
@@ -115,10 +128,63 @@ class BankingSystem:
         choice = int(input("Enter a number to select your option: "))
         
         if choice == 1:
-            int(input("How much money would you like to deposit? "))
+            BankingSystem.deposit(self)
+            
             
         elif choice == 2:
-            int(input("How much money would you like to withdraw? "))
+            BankingSystem.withdraw(self)
                 
         elif choice == 3:
             BankingSystem.account_selection(self)
+    
+    def deposit(self):
+        deposit = int(input("How much money would you like to deposit? "))
+        
+        if deposit >= 0:
+            database = csv.reader(open('userList.csv'))
+            lines = list(database)  
+            
+            
+            overdraftMarker = "limit: (.*),"
+            self.overdraftAmount = re.search(overdraftMarker, self.information[1]).group(1)
+            
+            if self.currentSelected:
+                lines[self.i][4] = ("Overdraft limit: {0}, Balance: {1}".format(self.overdraftAmount, int(self.balance[1]) + deposit))
+            
+        
+            writer = csv.writer(open('userList.csv', 'w', newline=''), delimiter=',')
+            writer.writerows(lines)
+            print("Your money has been deposited. Thank you.")
+            
+        else:
+            print("You cannot deposit a negative number, please try again.")
+            BankingSystem.deposit(self)
+            
+            
+    def withdraw(self):
+        withdrawal = int(input("How much money would you like to withdraw? "))
+        
+        if (int(self.balance[1]) - withdrawal <0):
+            print("Insufficient funds. Please try again or enter 0 to end withdrawal.")
+        
+        elif withdrawal >= 0:
+            database = csv.reader(open('userList.csv'))
+            lines = list(database)  
+            
+            
+            overdraftMarker = "limit: (.*),"
+            self.overdraftAmount = re.search(overdraftMarker, self.information[1]).group(1)
+            
+            if self.currentSelected:
+                lines[self.i][4] = ("Overdraft limit: {0}, Balance: {1}".format(self.overdraftAmount, int(self.balance[1]) - withdrawal))
+            
+        
+            writer = csv.writer(open('userList.csv', 'w', newline=''), delimiter=',')
+            writer.writerows(lines)
+            print("Your money has been withdrawn. Thank you.")
+            
+        else:
+            print("You cannot withdraw a negative number, please try again.")
+            BankingSystem.deposit(self)
+        
+        
