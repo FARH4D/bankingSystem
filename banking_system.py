@@ -18,8 +18,10 @@ class BankingSystem:
         self.userCurrentAccount = ''
         self.balance = 0
         self.currentSelected = False
+        self.savingSelected = False
         self.i = 0
         self.overdraftAmount = ''
+        self.accountNumbers = 0
 
     def run_app(self):
         print("Welcome to the banking system, please log in first.")
@@ -57,7 +59,8 @@ class BankingSystem:
                 print()
                 if self.userType == 'user':
                     BankingSystem.customer_view(self)
-
+                elif self.userType == 'admin':
+                    BankingSystem.admin_view(self)
                 
         else:
             print("Incorrect password.")
@@ -76,13 +79,21 @@ class BankingSystem:
         if choice == 1:
             BankingSystem.account_selection(self)
         elif choice == 2:
-            print("ok")
+            BankingSystem.summary(self)
         elif choice == 3:
             print("Quitting application.")
         else:
             print("Wrong")
-        
+    
+    
+    
+    
+    
+    
     def account_selection(self):
+        
+        self.currentSelected = False
+        self.savingSelected = False
         
         database = open('userList.csv', 'r', newline='')
         csvreader = csv.reader(database, delimiter=',')
@@ -103,34 +114,36 @@ class BankingSystem:
             
             if self.currentAccount and i == 1:
                 
-
+                
                 self.balance = self.information[1].split('Balance: ', 1)
                 print("{0} - Current account: £{1}".format(i, self.balance[1])  )
             else:
                 self.balance = self.information[i].split('Balance: ', 1)
                 print("{0} - Saving account: £{1}".format(i, self.balance[1]) )
         
-        
+
         accountSelected = False
         while accountSelected == False:
-            choice = int(input("Enter a number to select your option: "))
+            self.choice = int(input("Enter a number to select your option: "))
             print()
             
-            if choice >= 1 and choice <= len(self.information) - 1:
+            if self.choice >= 1 and self.choice <= len(self.information) - 1:
                 accountSelected = True
                 
-                if choice == 1 and self.currentAccount:
+                if self.choice == 1 and self.currentAccount:
                     
+                    self.balance = self.information[1].split('Balance: ', 1)
                     print("You selected 1 - Current account: £{0}.".format(self.balance[1]))
                     self.currentSelected = True
                     BankingSystem.account_options(self)
                     
                 else:
-                    self.balance = self.information[choice].split('Balance: ', 1)
-                    print("You selected {0} - Saving account: £{1}.".format(choice, self.balance[1]))
+                    self.balance = self.information[self.choice].split('Balance: ', 1)
+                    print("You selected {0} - Saving account: £{1}.".format(self.choice, self.balance[1]))
+                    self.savingSelected = True
                     BankingSystem.account_options(self)
                     
-            elif choice == 0:
+            elif self.choice == 0:
                 accountSelected = True
                 BankingSystem.customer_view(self)
                 
@@ -164,13 +177,22 @@ class BankingSystem:
             lines = list(database)  
             
             
-            overdraftMarker = "limit: (.*),"
-            self.overdraftAmount = re.search(overdraftMarker, self.information[1]).group(1)
+            if self.currentSelected:
+                overdraftMarker = "limit: (.*),"
+                self.overdraftAmount = re.search(overdraftMarker, self.information[1]).group(1)
+            
+            if self.savingSelected:
+                interestMarker = "rate: (.*),"
+                self.interestAmount = re.search(interestMarker, self.information[self.choice]).group(1)
             
             if self.currentSelected:
                 lines[self.i][4] = ("Overdraft limit: {0}, Balance: {1}".format(self.overdraftAmount, int(self.balance[1]) + deposit))
-            
-        
+            else:
+                if self.currentAccount:
+                    lines[self.i][3 + self.choice] = ("Interest rate: {0}, Balance: {1}".format(self.interestAmount, int(self.balance[1]) + deposit))         
+                else:
+                    lines[self.i][4 + self.choice] = ("Interest rate: {0}, Balance: {1}".format(self.interestAmount, int(self.balance[1]) + deposit))
+                
             with open('userList.csv', 'w', newline = '') as outfile:
                 writer = csv.writer(outfile)
                 writer.writerows(lines)
@@ -194,19 +216,28 @@ class BankingSystem:
             database = csv.reader(open('userList.csv'))
             lines = list(database)  
             
+            if self.currentSelected:
+                overdraftMarker = "limit: (.*),"
+                self.overdraftAmount = re.search(overdraftMarker, self.information[1]).group(1)
             
-            overdraftMarker = "limit: (.*),"
-            self.overdraftAmount = re.search(overdraftMarker, self.information[1]).group(1)
+            if self.savingSelected:
+                interestMarker = "rate: (.*),"
+                self.interestAmount = re.search(interestMarker, self.information[self.choice]).group(1)
             
             if self.currentSelected:
                 lines[self.i][4] = ("Overdraft limit: {0}, Balance: {1}".format(self.overdraftAmount, int(self.balance[1]) - withdrawal))
-            
+            else:
+                if self.currentAccount:
+                    lines[self.i][3 + self.choice] = ("Interest rate: {0}, Balance: {1}".format(self.interestAmount, int(self.balance[1]) - withdrawal))         
+                else:
+                    lines[self.i][4 + self.choice] = ("Interest rate: {0}, Balance: {1}".format(self.interestAmount, int(self.balance[1]) - withdrawal))
         
             with open('userList.csv', 'w', newline = '') as outfile:
                 writer = csv.writer(outfile)
                 writer.writerows(lines)
             
             print("Your money has been withdrawn. Thank you.")
+            print()
             BankingSystem.account_selection(self)
             
         else:
@@ -215,6 +246,84 @@ class BankingSystem:
   
 
         
+
+    
+    def summary(self):
+        
+        print("Total number of accounts: {0}".format(len(self.information)-1))
+        for i in range(1, len(self.information)):
+            
+            if self.currentAccount and i == 1:
+                
+                
+                self.balance = self.information[1].split('Balance: ', 1)
+                print("{0} - Current account: £{1}".format(i, self.balance[1])  )
+            else:
+                self.balance = self.information[i].split('Balance: ', 1)
+                print("{0} - Saving account: £{1}".format(i, self.balance[1]) )
+        print()
+        print("Address: {0}".format(self.information[0]))
+
+        choice = input("Enter 0 to go back to previous menu or q to quit the program:")
+        print()
+
+        if choice == '0':
+            BankingSystem.customer_view(self)
+        elif choice == 'q':
+            print("Quitting application.")
+    
+    
+    
+    
+    def admin_view(self):
+        
+        print("Please select an option:")
+        print("1 - Customer Summary")
+        print("2 - Financial Forecast")
+        print("3 - Transfer Money - GUI")
+        print("4 - Account Management - GUI")
+        choice = int(input("Enter a number to select your option:"))
+        
+        if choice == 1:
+            BankingSystem.customer_summary(self)
         
         
+    def customer_summary(self):
         
+        database = open('customersOnly.csv', 'r', newline='')
+        csvreader = csv.reader(database, delimiter=',')
+        
+        i = 0
+        
+        for row in csvreader:
+            i +=1
+        
+        
+        database.close()
+        self.accountNumbers = i
+        
+        print("There are {0} customer accounts on the system.".format(self.accountNumbers))
+        print()
+        
+        database = open('customersOnly.csv', 'r', newline='')
+        csvreader = csv.reader(database, delimiter=',')
+        
+        for x in range(1, self.accountNumbers + 1):
+            
+            print("Account Number: {0}".format(x))
+            for row in csvreader:
+                print("Name: {0}".format(row[0]))
+                print("Address: {0}".format(row[3]))
+                print()
+                
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
