@@ -310,13 +310,48 @@ class BankingSystem:
         
         for x in range(1, self.accountNumbers + 1):
             
-            print("Account Number: {0}".format(x))
             for row in csvreader:
                 print("Name: {0}".format(row[0]))
                 print("Address: {0}".format(row[3]))
                 print()
                 
+                self.information = row[3:]
+                
+                self.information = [string for string in self.information if string !=""]
 
+                for i in range(1, len(self.information)):
+                    
+                    if (row[4] != ''):
+                        self.currentAccount = True
+                        
+                    if self.currentAccount and i == 1:
+                        
+                        self.balance = self.information[1].split('Balance: ', 1)
+                        print("Current Account")
+                        print("Balance: £{0}".format(self.balance[1]))
+                        
+                        overdraftMarker = "limit: (.*),"
+                        self.overdraftAmount = re.search(overdraftMarker, self.information[1]).group(1)
+                        print("Overdraft limit: {0}".format(self.overdraftAmount))
+                        print()
+                        
+                    else:
+                        self.balance = self.information[i].split('Balance: ', 1)
+                        print("Saving Account")
+                        print("Balance: £{0}".format(self.balance[1]))
+                        
+                        interestMarker = "rate: (.*),"
+                        self.interestAmount = re.search(interestMarker, self.information[i]).group(1)
+                        print("Interest rate: {0}".format(self.interestAmount))
+                        print()
+                        
+                    self.currentAccount = False
+                print()
+
+                                
+
+
+            self.i +=1
     
     
     
