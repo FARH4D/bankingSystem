@@ -285,9 +285,14 @@ class BankingSystem:
         choice = int(input("Enter a number to select your option:"))
         
         if choice == 1:
-            BankingSystem.customer_summary(self)
-        
-        
+            BankingSystem.customer_summary(self)       
+        elif choice == 2:
+            BankingSystem.financial_forecast(self)
+        elif choice == 3:
+            BankingSystem.transfer_money(self)
+        elif choice == 4:
+            BankingSystem.account_management(self)
+            
     def customer_summary(self):
         
         database = open('customersOnly.csv', 'r', newline='')
@@ -311,6 +316,7 @@ class BankingSystem:
         for x in range(1, self.accountNumbers + 1):
             
             for row in csvreader:
+                
                 print("Name: {0}".format(row[0]))
                 print("Address: {0}".format(row[3]))
                 print()
@@ -318,6 +324,9 @@ class BankingSystem:
                 self.information = row[3:]
                 
                 self.information = [string for string in self.information if string !=""]
+                
+                
+                
 
                 for i in range(1, len(self.information)):
                     
@@ -347,16 +356,97 @@ class BankingSystem:
                         
                     self.currentAccount = False
                 print()
-
-                                
-
-
             self.i +=1
     
+        database.close()
     
     
+    def financial_forecast(self):
+        
+        
+        
+        database = open('customersOnly.csv', 'r', newline='')
+        csvreader = csv.reader(database, delimiter=',')
+        
+        i = 0
+        
+        
+        
+        for row in csvreader:
+            i +=1
+        
+        
+        database.close()
+        self.accountNumbers = i
+        
+        print("There are {0} customer accounts on the system.".format(self.accountNumbers))
+        print()
+        
+        database = open('customersOnly.csv', 'r', newline='')
+        csvreader = csv.reader(database, delimiter=',')
+        
+        for x in range(1, self.accountNumbers + 1):
+            
+            
+            for row in csvreader:
+                total = 0
+                totalForecast = 0
+
+                self.information = row[3:]
+                
+                self.information = [string for string in self.information if string !=""]
+                
+                print("Name: {0}".format(row[0]))
+                print("Number of accounts in bank: {0}".format(len(self.information) - 1))
+
+                for i in range(1, len(self.information)):
+                    
+                    if (row[4] != ''):
+                        self.currentAccount = True
+                        
+                    if self.currentAccount and i == 1:
+                        
+                        self.balance = self.information[1].split('Balance: ', 1)
+                        
+                        total += int(self.balance[1])
+                        
+                        overdraftMarker = "limit: (.*),"
+                        self.overdraftAmount = re.search(overdraftMarker, self.information[1]).group(1)
+                        totalForecast += int(self.balance[1])
+                        
+                    else:
+
+                        self.balance = self.information[i].split('Balance: ', 1)
+
+                        total += int(self.balance[1])
+
+                        interestMarker = "rate: (.*)%"
+                        self.interestAmount = re.search(interestMarker, self.information[i]).group(1)
+
+
+                        interest = int(self.balance[1]) * (float(self.interestAmount) / 100)
+                        forecast = int(self.balance[1]) + interest
+                        
+                        totalForecast += forecast
+                    
+                    if i == len(self.information) - 1:
+                        print("Current total balance: £{0}".format(total))
+                        print("Financial forecast of total money after a year: £{:.2f}".format(totalForecast))
+                        print()
+                        
+                    self.currentAccount = False
+                print()
+            self.i +=1
     
-    
+        database.close()
+        
+        
+        def transfer_money(self):
+            print("yup")
+        
+        
+        def account_management(self):
+            print("yeah")
     
     
     

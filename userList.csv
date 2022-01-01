@@ -1,5 +1,5 @@
 Username,Password,User type,Address,Current Account,Saving Account 1,Saving Account 2
 Arthur,123,admin,,,,
-Boris,ABC,user,10 London Road,"Overdraft limit: 100, Balance: 900",,
+Boris,ABC,user,10 London Road,"Overdraft limit: 100, Balance: 1000",,
 Chloe,1+x,user,99 Queens Road,"Overdraft limit: 100, Balance: 600","Interest rate: 2.99%, Balance: 3900",
 David,aBC,user,2 Birmingham Street,,"Interest rate: 4.99%, Balance: 551","Interest rate: 4.99%, Balance: 3900"
